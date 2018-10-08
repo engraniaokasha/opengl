@@ -1,0 +1,142 @@
+
+#include "pch.h"
+#include <iostream>
+#include <stdlib.h>
+
+#ifdef __APPLE__
+#include <OpenGL/OpenGL.h>
+#include <GLUT/glut.h>
+#else
+#include <GL/glut.h>
+#endif
+
+using namespace std;
+
+//Called when a key is pressed
+void handleKeypress(unsigned char key, int x, int y) {
+	switch (key) {
+	case 27: //Escape key
+		exit(0);
+	}
+}
+
+//Initializes 3D rendering
+void initRendering() {
+	glEnable(GL_DEPTH_TEST);  
+	glEnable(GL_COLOR_MATERIAL);	 //Enable color
+	glClearColor(0.1f , 0.1f , 0.3f, 1.0 );  //Change the background 
+}
+
+//Called when the window is resized
+void handleResize(int w, int h) {
+	glViewport(0, 0, w, h);
+	glMatrixMode(GL_PROJECTION);
+	glLoadIdentity();
+	gluPerspective(45.0, (double)w / (double)h, 1.0, 200.0);
+}
+
+float x = 0.0f;		//to translate the square in x axis
+float y = 0.0f;		//to translate the square in y axis
+float angle = 0.0f;   //to rotate the square  
+float a = 0.0f ;	   // for scaling
+float flag = 0.0f;		
+
+//Draws the 3D scene
+void drawScene() {
+	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+
+	glMatrixMode(GL_MODELVIEW);   //Switch to the drawing perspective
+	glLoadIdentity();             //Reset the drawing perspective
+	
+	//translated square 
+	glPushMatrix();                     //Save the transformations performed thus far            
+	glTranslatef(-5.0f, 5.0f, -15.0f);  // move to new refrence point
+	glTranslatef(x, y, 0.0f);		    // trace x and y axis
+	glBegin(GL_QUADS);                  
+	glColor3f(1.0f , 1.0f , 0.7f);      //change color to off-white
+	glVertex3f(-0.5f,- 0.5f, 0.0f);     
+	glVertex3f(-0.5f, 0.5f, 0.0f);
+	glVertex3f(0.5f, 0.5f, 0.0f);
+	glVertex3f(0.5f, -0.5f, 0.0f);
+	glEnd();
+	// to change direction
+	if (flag == 0.0)					
+		if (x < 10.0f)               
+			x += 0.001f;
+		else if (y > -10.0f)
+			y -= 0.001f;
+		else
+			flag = 1.0;
+	if (flag == 1.0)
+		if (x >= 0.0f)
+			x -= 0.001f;
+		else if (y <= 0.0f)
+			y += 0.001f;
+		else
+			flag = 0.0;
+
+	glPopMatrix();
+	
+
+	
+	// rotate square
+	glPushMatrix();
+	glTranslatef(0.0f, 0.0f, -15.0f);
+	glRotatef(angle, 0.0f, 0.0f, 1.0f);          //rotate about z axis 
+	glBegin(GL_QUADS);
+	glColor3f(1.0f , 1.0f , 0.7f);               //change color to off-white
+	glVertex3f(-2.0f, -2.0f, 0.0f);
+	glVertex3f(-2.0f, 2.0f, 0.0f);
+	glVertex3f(2.0f, 2.0f, 0.0f);
+	glVertex3f(2.0f, -2.0f, 0.0f);
+	glEnd();
+	angle += 0.01f;
+	glPopMatrix();
+	
+	
+	
+	//scaling square
+	glPushMatrix();
+	glTranslatef(0.0f, 0.0f, -15.0f);
+	glScalef(a,a, 1.0f);                        //scale in x & y axis
+	glBegin(GL_QUADS);
+	glColor3f(1.0f , 0.6f , 0.4f);              //change color to orange
+	glVertex3f(-5.0f, -5.0f, 0.0f);
+	glVertex3f(-5.0f, 5.0f, 0.0f);			
+	glVertex3f(5.0f, 5.0f, 0.0f);
+	glVertex3f(5.0f, -5.0f, 0.0f);
+	glEnd();
+	//scale ratio
+	if (a <= 1.0)
+	a += 0.0001f;
+	if (a >= 1)
+		a -= 1.0;
+
+	glPopMatrix();
+	
+	glutPostRedisplay();              //Tell GLUT that the display has changed
+	glutTimerFunc(25, 0, 0);          //Tell GLUT to call update again in 25 milliseconds
+	glutSwapBuffers();
+}
+
+
+int main(int argc, char** argv) {
+	//Initialize GLUT
+	glutInit(&argc, argv);
+	glutInitDisplayMode(GLUT_DOUBLE | GLUT_RGB | GLUT_DEPTH);
+	glutInitWindowSize(400, 400);
+
+	//Create the window
+	glutCreateWindow("Color & Transformation");
+	initRendering();
+
+	//Set handler functions
+	glutDisplayFunc(drawScene);
+	glutKeyboardFunc(handleKeypress);
+	glutReshapeFunc(handleResize);
+
+	
+
+	glutMainLoop();
+	return 0;
+}
